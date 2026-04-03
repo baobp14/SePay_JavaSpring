@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Thanh toán đơn hàng</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #1a1a1a; color: white; }
+        .card { border-radius: 20px; overflow: hidden; }
+        .qr-image { border: 5px solid #f8f9fa; border-radius: 15px; }
+    </style>
+</head>
+<body>
+<div class="container text-center mt-5" style="max-width: 480px;">
+
+    <div id="payment-box" class="card p-4 shadow-lg text-dark bg-white">
+        <h4 class="fw-bold text-uppercase">Quét mã để thanh toán</h4>
+        <p class="text-muted small">Mở App Ngân hàng hoặc Ví điện tử để quét mã</p>
+        <hr>
+
+        <img th:src="${qrUrl}" class="img-fluid qr-image mb-3 shadow-sm" alt="VietQR">
+
+        <div class="alert alert-warning text-start border-0 shadow-sm">
+            <div class="mb-1">Mã đơn hàng: <b id="orderIdDisplay" th:text="${orderId}"></b></div>
+            <div>Số tiền: <b class="text-danger fs-5" th:text="${#numbers.formatDecimal(amount, 0, 'COMMA', 0, 'POINT')} + 'đ'"></b></div>
+        </div>
+
+        <div class="d-flex align-items-center justify-content-center text-success fw-bold mt-2">
+            <div class="spinner-grow spinner-grow-sm me-2" role="status"></div>
+            <span class="small">Hệ thống đang chờ xác nhận tiền về...</span>
+        </div>
+
+        <button type="button" class="btn btn-sm mt-4" style="opacity: 0.05; border: none;" onclick="fakePayment()">.</button>
+    </div>
+
+</div>
+
+<script th:inline="javascript">
+    // Lấy mã đơn từ Server thông qua Thymeleaf
+    const orderId = [[${orderId}]];
+    console.log("🚀 Đang theo dõi đơn hàng: " + orderId);
+
+    // Hàm đi hỏi Server xem đã có tiền chưa
+    const checkInterval = setInterval(function() {
+        fetch('/api/check-status/' + orderId)
+            .then(res => res.json())
+            .then(isPaid => {
+                console.log("Trạng thái: " + (isPaid ? "✅ ĐÃ CÓ TIỀN" : "⏳ Đang chờ..."));
+
+                if (isPaid === true) {
+                    // KHI CÓ TIỀN -> BIẾN HÌNH CÁI PAYMENT-BOX
+                    document.getElementById('payment-box').innerHTML = `
+                        <div class="py-5 animate__animated animate__fadeIn">
+                            <div class="mb-4">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" fill="currentColor" class="bi bi-check-circle-fill text-success" viewBox="0 0 16 16">
+                                    <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0m-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z"/>
+                                </svg>
+                            </div>
+                            <h2 class="fw-bold text-success">THÀNH CÔNG!</h2>
+                            <p class="text-muted">Hệ thống đã xác nhận thanh toán cho đơn <br> <b>${orderId}</b></p>
+                            <hr>
+                            <a href="/" class="btn btn-primary w-100 fw-bold py-2 shadow">TIẾP TỤC MUA SẮM</a>
+                        </div>
+                    `;
+                    // Dừng vòng lặp hỏi Server
+                    clearInterval(checkInterval);
+                }
+            })
+            .catch(err => console.error("Lỗi kết nối Server:", err));
+    }, 2000); // Cứ 2 giây hỏi 1 lần
+
+    // Hàm giả lập nhanh nếu sếp không muốn gõ Console F12
+    function fakePayment() {
+        fetch('/api/sepay-callback', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ transferAmount: 1000, content: orderId })
+        }).then(() => console.log("🔥 Đã kích hoạt ảo thuật!"));
+    }
+</script>
+</body>
+</html>
