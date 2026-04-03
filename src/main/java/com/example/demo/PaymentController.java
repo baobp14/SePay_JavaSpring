@@ -20,7 +20,7 @@ public class PaymentController {
                              Model model) {
 
         String bank = "VPB";
-        String accountNo = "0964310061"; // STK của sếp Bảo
+        String accountNo = "0964310061"; 
         String accountName = "PHAM LE GIA BAO";
 
 
