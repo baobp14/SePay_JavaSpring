@@ -7,13 +7,13 @@ import org.springframework.web.bind.annotation.*;
 @Controller
 public class PaymentController {
 
-    // 1. Trang nhập liệu (Vào localhost:8082/)
+
     @GetMapping("/")
     public String showInputPage() {
         return "input";
     }
 
-    // 2. Xử lý tạo QR (Nút bấm từ trang input)
+
     @PostMapping("/generate-qr")
     public String generateQR(@RequestParam Double amount,
                              @RequestParam String description,
