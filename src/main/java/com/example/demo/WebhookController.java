@@ -8,10 +8,9 @@ import java.util.Map;
 @RequestMapping("/api")
 public class WebhookController {
 
-    // "Cuốn sổ cái" để ghi nhớ trạng thái: OrderId -> Đã thanh toán hay chưa?
     public static Map<String, Boolean> paymentStatus = new ConcurrentHashMap<>();
 
-    // 1. Cổng nhận tiền (Cho Sepay/Postman gọi vào)
+
     @PostMapping("/sepay-callback")
     public String handle(@RequestBody PaymentDTO data) {
         String orderId = data.getContent().trim(); // Thêm .trim() vào đây sếp nhé
@@ -23,7 +22,7 @@ public class WebhookController {
         return "OK";
     }
 
-    // 2. Cổng check tiền (Cho trang HTML gọi vào để hỏi: "Thanh toán chưa?")
+
     @GetMapping("/check-status/{orderId}")
     public Boolean checkStatus(@PathVariable String orderId) {
         // Duyệt qua toàn bộ danh sách các sớ tiền về đã nhận
